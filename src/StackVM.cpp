@@ -2,8 +2,9 @@
 
 using namespace vm;
 
-StackVM::StackVM(std::vector<u32> bin){
-
+StackVM::StackVM(){
+    //code+stack+ram = 41984
+    memory.reserve(65536); // init 256k bytes memory 
 }
 
 
@@ -68,8 +69,13 @@ void StackVM::decode(){
 void StackVM::execute(){
     switch (this->typ)
     {
-        case :
-            /* code */
+        case 0x0: // undefined
+            break;
+        case 0x1: // none-negative integer
+            break;
+        case 0x2: // negative integer
+            break;
+        case 0x3: // instraction
             break;
     
         default:
