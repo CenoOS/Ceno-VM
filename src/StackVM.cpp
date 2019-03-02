@@ -4,9 +4,8 @@ using namespace vm;
 
 StackVM::StackVM(){
     // code + stack + ram = 41984
-    memory.reserve(65536); // init 256k bytes memory 
+    this->memory.reserve(65536); // init 256k bytes memory 
 }
-
 
 /**
  * DEFINATION OF INSTRACTION:
@@ -50,20 +49,20 @@ void StackVM::doPrimtive(){
     switch (this->dat)
     {
         case 0x30000001: // ADD
-            memory[sp] = memory[sp-1] + memory[sp];
+            this->memory[this->sp] = this->memory[this->sp-1] + this->memory[this->sp];
             break;
         case 0x30000002: // SUB
-            memory[sp] = memory[sp-1] - memory[sp];
+            this->memory[this->sp] = this->memory[this->sp-1] - this->memory[this->sp];
             break;
         case 0x30000003: // MUL
-            memory[sp] = memory[sp-1] * memory[sp];
+            this->memory[this->sp] = this->memory[this->sp-1] * this->memory[this->sp];
             break;
         case 0x30000004: // DIV
-            memory[sp] = memory[sp-1] / memory[sp];
+            this->memory[this->sp] = this->memory[this->sp-1] / this->memory[this->sp];
             break;
 
         case 0x30000000: // HALT
-            running = 0x0;
+            this->running = 0x0;
             break;
         default:
             break;
@@ -72,16 +71,16 @@ void StackVM::doPrimtive(){
 
 void StackVM::loadProgram(std::vector<i32> program){
     for(int i = 0;i<program.size();i++){
-        memory[pc+i] = program[i];
+        this->memory[this->pc+i] = program[i];
     }
 }
 
 void StackVM::fetch(){
-    pc++;
+    this->pc++;
 }
 
 void StackVM::decode(){
-    i32 code = memory[pc];
+    i32 code = this->memory[this->pc];
     this->typ = getType(code);
     this->dat = getData(code);
 }
@@ -92,27 +91,53 @@ void StackVM::execute(){
         case 0x0: // undefined
             break;
         case 0x1: // none-negative integer
-            memory[sp] = this->dat;
-            sp++;
+            this->memory[this->sp] = this->dat;
+            this->sp++;
             break;
         case 0x2: // negative integer
-            memory[sp] = this->a.dat;
-            sp++;
+            this->memory[this->sp] = this->dat;
+            this->sp++;
             break;
         case 0x3: // instraction
-            doPrimtive();
+            this->doPrimtive();
             break;
         default:
             break;
     }
 }
 
-
 void StackVM::run(){
-    running = 0x1;
-    while(running){
+    this->running = 0x1;
+    while(this->running){
         this->fetch();
         this->decode();
         this->execute();
     }
 }
+
+
+i32 StackVM::stackPop(){
+    this->sp--;
+    return this->memory[this->sp];
+}
+
+i32 StackVM::stackPush(i32 value){
+    this->memory[this->sp] = value;
+    this->sp++;
+}
+
+i32 StackVM::stackTop(){
+    return this->memory[this->sp-1];
+}
+
+i32 StackVM::stackIsEmpty(){
+    if(this->sp==this->flashSize){
+        return 0x00000001;
+    }
+    return 0x00000000;
+}
+
+i32 StackVM::stackReset(){
+    this->sp = this->flashSize;
+}
+
