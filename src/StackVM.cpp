@@ -3,7 +3,7 @@
 using namespace vm;
 
 StackVM::StackVM(){
-    //code+stack+ram = 41984
+    // code + stack + ram = 41984
     memory.reserve(65536); // init 256k bytes memory 
 }
 
@@ -15,9 +15,9 @@ StackVM::StackVM(){
  *  FIRST 2 BITS ARE TYPICAL
  *  OTHER 30 BITS ARE DATA
  * 
- *  EG. 0b0100 0000 0000 0000 0000 0000 0000 0000
- *       TYPICAL IS 0b01 
- *       DATA IS   Ob00 0000 0000 0000 0000 0000 0000 0000
+ *  EG.                 0b0100 0000 0000 0000 0000 0000 0000 000F
+ *       TYPICAL IS   0b0000 0000 0000 0000 0000 0000 0000 0001
+ *       DATA     IS   Ob0000 0000 0000 0000 0000 0000 0000 000F
  * 
  * DEFINATION OF TYPICAL:
  *  0b00    :   UNDEFINED
@@ -38,16 +38,36 @@ i32 StackVM::getData(i32 code){
     return data;
 }
 
-
 /**
  * DEINATION OF INSTRACTION
- *  ADD :   0X30000000
- *  SUB :   0X30000001
- *  MUL :   0X30000002
- *  DIV :   0X30000003
+ *  HALT :   0x30000000
+ *  ADD  :   0X30000001
+ *  SUB  :   0X30000002
+ *  MUL  :   0X30000003
+ *  DIV  :   0X30000004
  */
 void StackVM::doPrimtive(){
+    switch (this->dat)
+    {
+        case 0x30000001: // ADD
+            memory[sp] = memory[sp-1] + memory[sp];
+            break;
+        case 0x30000002: // SUB
+            memory[sp] = memory[sp-1] - memory[sp];
+            break;
+        case 0x30000003: // MUL
+            memory[sp] = memory[sp-1] * memory[sp];
+            break;
+        case 0x30000004: // DIV
+            memory[sp] = memory[sp-1] / memory[sp];
+            break;
 
+        case 0x30000000: // HALT
+            running = 0x0;
+            break;
+        default:
+            break;
+    }
 }
 
 void StackVM::loadProgram(std::vector<i32> program){
@@ -72,12 +92,16 @@ void StackVM::execute(){
         case 0x0: // undefined
             break;
         case 0x1: // none-negative integer
+            memory[sp] = this->dat;
+            sp++;
             break;
         case 0x2: // negative integer
+            memory[sp] = this->a.dat;
+            sp++;
             break;
         case 0x3: // instraction
+            doPrimtive();
             break;
-    
         default:
             break;
     }
@@ -85,5 +109,10 @@ void StackVM::execute(){
 
 
 void StackVM::run(){
-
+    running = 0x1;
+    while(running){
+        this->fetch();
+        this->decode();
+        this->execute();
+    }
 }
